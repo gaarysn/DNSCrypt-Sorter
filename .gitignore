@@ -1,1 +1,5 @@
 sanstitre*
+__pycache__/
+*.pyc
+public-resolvers.json
+.dnscrypt-cache/

@@ -1,47 +1,162 @@
 # Dnscrypt-list-ping-sorting
-A program to ping and sort the DNS servers proposed by dnscrypt, see here: https://dnscrypt.info/
 
-The script pings 5 times each server, and displays the average and the error on the mean and the reliablity. The final display lists all the servers that responded, sorted by their ping time.
+CLI utility for loading official DNSCrypt catalogs, checking latency with visible probe progress, and showing results in a modern terminal UI with compact `sdns://...` stamps.
 
-It's written in python3 and (unfortunately) needs root privileges because of the ping function that requires creating sockets — except for the executable version. 
+## Supported catalogs
 
-The ping function is from there: https://gist.github.com/pyos/10980172
+The tool can now load the official DNSCrypt catalogs directly:
 
-# How to use it?
-The most straightforward way is simply to go with:
+- `public-resolvers`
+- `relays`
+- `parental-control`
+- `opennic`
+- `onion-services`
+- `odoh-servers`
+- `odoh-relays`
 
-`wget https://raw.githubusercontent.com/Magalame/Dnscrypt-list-ping-sorting/master/ping_dnscrypt.py`
+By default an interactive selection screen is shown when you run:
 
-then
+```bash
+python3 ping_dnscrypt.py
+```
 
-`sudo python3 ping_dnscrypt.py`
+There you can choose multiple catalogs and multiple protocols to test. The interactive wizard now also lets you:
 
-**If you think it goes too slowly** you can increase the speed by using threading (although it might make the data less reliable):
+- choose whether to show `top N` or all results
+- save the final result as `txt`, `json` or `csv`
+- go back to the previous step with `back`
+- return to the main menu after results
 
-`sudo python3 ping_dnscrypt.py -t`
+You can still select catalogs explicitly with flags or use `--catalog all`.
 
-The default number of ping per server is 5 without threading, 10 with. You can specify the number if you want to change that (for example if you want to increase the precision of the 'reliability' parameter):
+## Protocol selection
 
-`sudo python3 ping_dnscrypt.py -n yournumberhere`
+Protocols can now be selected explicitly, including multiple values:
 
-Although if you increase this number too much with the threading activated you might overload your network, and you will end up with inaccurate results. To avoid that you can define delay between every single ping request, the default is 0.02 seconds:
+- `DNSCrypt`
+- `DoH`
+- `ODoH`
+- `DNSCrypt relay`
+- `ODoH relay`
 
-`sudo python3 ping_dnscrypt.py -p yourdelayinsecondshere`
+You can pass `--proto` multiple times, or choose them interactively on startup.
 
-You can also define a delay between each time we start pinging a server (as the program goes through a list), the default is 0.2 seconds:
+## Filter modes
 
-`sudo python3 ping_dnscrypt.py -s yourdelayinsecondshere`
+Three filter modes are available:
 
+- `strict`: strict Europe + `DNSCrypt` + `nofilter` + `nolog` + `IPv4`
+- `catalog`: broader measurable candidates from the selected catalogs
+- `none`: only require a measurable non-IPv6 endpoint with a valid `sdns://` stamp
 
+The default remains `strict`.
 
-# You don't have python or the good version of python, and you want to download an executable (Windows)?
-Portable version: https://drive.google.com/file/d/1o3ndcbgBnt4d_ErJ64FXeKWJMU3cgvK-/view?usp=sharing
+## Probe profiles
 
-And for 32 bits: https://drive.google.com/open?id=1aDX-0h7k9nAIBg0lFi5961_kjKOa7vPw
+To avoid checks that feel too fast and opaque, the tool now has explicit probe profiles:
 
-Once downloaded, find where is located 'pingdnscrypt.exe', then run open a terminal and type
+- `fast`
+- `balanced`
+- `deep`
 
-`ping_dnscrypt.exe`
+These presets control attempt count, delays, timeout and the default threaded worker budget. You can still override them manually with:
 
-# It might happen that the display isn't great, some charac returns are missed sometimes
-I don't know how to solve it yet, for now I strongly recommend you use it in full screen (not the F11 type of fullscren, just when you click on the square next to the cross at the top right corner of the terminal).
+- `-n`, `--number-ping`
+- `-p`, `--ping-delay`
+- `-s`, `--server-delay`
+- `-m`, `--time-out`
+- `--workers`
+
+Latency is measured by:
+
+1. TCP connect latency against the decoded resolver host/port.
+2. ICMP fallback if TCP probing fails, unless `--tcp-only` is enabled.
+3. Repeated probing with mean latency, standard error and reliability.
+
+## Terminal UI
+
+Terminal output now includes:
+
+- animated progress while catalogs are loading and resolvers are being checked
+- live counters for successful and failed checks
+- compact stamp rendering so long `sdns://...` values no longer break terminal width
+- optional full stamp display when needed
+
+Progress is written to `stderr`, so machine-readable output can still be redirected safely from `stdout`.
+
+## Usage
+
+Run the legacy entry point:
+
+```bash
+python3 ping_dnscrypt.py --catalog public-resolvers --profile balanced -t --top 10
+```
+
+Or use the package entry point:
+
+```bash
+python3 -m dnscrypt_sorter.cli --catalog all --filter-mode catalog --profile deep -t --all
+```
+
+Useful options:
+
+- `--catalog NAME`: select an official catalog, repeatable
+- `--catalog all`: load all official catalogs
+- `--list-catalogs`: print supported catalog names
+- `--proto NAME`: select protocol to test, repeatable
+- `--list-protos`: print supported protocol names
+- `--filter-mode strict|catalog|none`
+- `--profile fast|balanced|deep`
+- `--top N`: print the fastest `N` results
+- `--all`: print all successful results
+- `--stamp-mode compact|full|hidden`
+- `--json`: emit JSON instead of terminal UI
+- `--cache-dir PATH`: directory used to cache downloaded catalogs
+
+## Interactive wizard flow
+
+The default interactive flow is now:
+
+1. choose one or more catalogs
+2. choose one or more protocols
+3. choose result size: `top N` or `all`
+4. run checks
+5. save results or return to the main menu
+
+At every wizard step after the first one you can type `back` to return to the previous menu.
+
+Examples:
+
+Check strict European DNSCrypt resolvers and show only top 10:
+
+```bash
+python3 ping_dnscrypt.py --catalog public-resolvers --proto DNSCrypt --profile balanced -t --top 10
+```
+
+Check all official catalogs with a broader filter and print everything:
+
+```bash
+python3 ping_dnscrypt.py --catalog all --proto all --filter-mode catalog --profile deep -t --all
+```
+
+Emit JSON with full stamps:
+
+```bash
+python3 ping_dnscrypt.py --catalog public-resolvers --top 25 --json
+```
+
+Save results non-interactively by redirecting output if needed, or use the built-in wizard save step in interactive mode.
+
+## Development
+
+Run tests:
+
+```bash
+python3 -m unittest discover -s tests -v
+```
+
+Install as a local package:
+
+```bash
+python3 -m pip install -e .
+```

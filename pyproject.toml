@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dnscrypt-list-ping-sorting"
+version = "0.2.0"
+description = "Rank strict European DNSCrypt resolvers by measured latency"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+  { name = "Magalame" }
+]
+dependencies = [
+  "rich>=13.7.0"
+]
+
+[project.scripts]
+dnscrypt-sorter = "dnscrypt_sorter.cli:main"
+
+[tool.setuptools]
+packages = ["dnscrypt_sorter"]
