@@ -1,6 +1,10 @@
 # Dnscrypt-list-ping-sorting
 
-CLI utility for loading official DNSCrypt catalogs, checking latency with visible probe progress, and showing results in a modern terminal UI with compact `sdns://...` stamps.
+A program to ping and sort the DNS servers proposed by DNSCrypt ([dnscrypt.info](https://dnscrypt.info/)).
+
+This project is an evolved version of the original [Magalame/Dnscrypt-list-ping-sorting](https://github.com/Magalame/Dnscrypt-list-ping-sorting), which pings resolvers and displays them sorted by latency. Many thanks to the original author for the idea and the initial implementation.
+
+The script now loads official DNSCrypt catalogs, checks latency with visible probe progress, and shows results in a modern terminal UI with compact `sdns://...` stamps. The core idea—ping each server, show average and reliability, list responders sorted by ping time—remains the same; the data source, filters, and interface have been updated.
 
 ## Supported catalogs
 
@@ -146,6 +150,10 @@ python3 ping_dnscrypt.py --catalog public-resolvers --top 25 --json
 ```
 
 Save results non-interactively by redirecting output if needed, or use the built-in wizard save step in interactive mode.
+
+## Credits
+
+Original project: [Magalame/Dnscrypt-list-ping-sorting](https://github.com/Magalame/Dnscrypt-list-ping-sorting) — a program to ping and sort the DNS servers proposed by dnscrypt.
 
 ## Development
 
