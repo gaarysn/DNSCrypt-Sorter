@@ -1,182 +1,195 @@
-# Dnscrypt-list-ping-sorting
+# DNSCrypt-Sorter
 
-A program to ping and sort the DNS servers proposed by DNSCrypt ([dnscrypt.info](https://dnscrypt.info/)).
+```
+ ____  _   _ ____                       _     ____             _
+|  _ \| \ | / ___|  ___ _ __ _   _ _ __ | |_  / ___|  ___  _ __| |_ ___ _ __
+| | | |  \| \___ \ / __| '__| | | | '_ \| __| \___ \ / _ \| '__| __/ _ \ '__|
+| |_| | |\  |___) | (__| |  | |_| | |_) | |_   ___) | (_) | |  | ||  __/ |
+|____/|_| \_|____/ \___|_|   \__, | .__/ \__| |____/ \___/|_|   \__\___|_|
+                              |___/|_|
+```
 
-This project is an evolved version of the original [Magalame/Dnscrypt-list-ping-sorting](https://github.com/Magalame/Dnscrypt-list-ping-sorting), which pings resolvers and displays them sorted by latency. Many thanks to the original author for the idea and the initial implementation.
+![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue?logo=python&logoColor=white)
+![Version 0.5.0](https://img.shields.io/badge/version-0.5.0-green)
+![License](https://img.shields.io/badge/license-MIT-yellow)
 
-The script now loads official DNSCrypt catalogs, checks latency with visible probe progress, and shows results in a modern terminal UI with compact `sdns://...` stamps. The core idea—ping each server, show average and reliability, list responders sorted by ping time—remains the same; the data source, filters, and interface have been updated.
+**Measure and rank DNS resolvers from official DNSCrypt catalogs by latency.**
 
-## Supported catalogs
+DNSCrypt-Sorter loads resolver lists published at [dnscrypt.info](https://dnscrypt.info/), probes each server with TCP/ICMP pings, and presents results sorted by response time in a modern terminal UI.
 
-The tool can now load the official DNSCrypt catalogs directly:
+---
 
-- `public-resolvers`
-- `relays`
-- `parental-control`
-- `opennic`
-- `onion-services`
-- `odoh-servers`
-- `odoh-relays`
+## Features
 
-By default an interactive selection screen is shown when you run:
+- **Official catalogs** — `public-resolvers`, `relays`, `parental-control`, `opennic`, `onion-services`, `odoh-servers`, `odoh-relays`
+- **Multiple protocols** — DNSCrypt, DoH, ODoH, DNSCrypt relay, ODoH relay
+- **Flexible filters** — nofilter, nolog, DNSSEC, IPv4/IPv6, country
+- **Probe profiles** — `fast`, `balanced`, `deep` presets with manual overrides
+- **Interactive wizard** — step-by-step selection with back navigation (`0`) and `Ctrl+C` to return to main menu
+- **IP check** — view local and public IP addresses from the main menu
+- **Rich terminal UI** — animated progress, live counters, color-coded output, adaptive ASCII banner
+- **Export** — save results as TXT, JSON, or CSV with auto-generated filenames into `dnscrypt-results/`
+
+---
+
+## Quick Start
+
+```bash
+git clone https://github.com/Magalame/Dnscrypt-list-ping-sorting.git
+cd Dnscrypt-list-ping-sorting
+python3 -m pip install -e .
+```
+
+Launch the interactive wizard:
+
+```bash
+dnscrypt-sorter
+```
+
+Or run directly:
 
 ```bash
 python3 ping_dnscrypt.py
 ```
 
-There you can choose multiple catalogs and multiple protocols to test. The interactive wizard now also lets you:
+---
 
-- choose optional filters such as `nofilter`, `nolog`, `DNSSEC`, IP version, and countries, or use the built-in `I don't know` option
-- choose whether to show `top N` or all results
-- check your current IP information from the main menu
-- save the final result as `txt`, `json` or `csv` with an auto-generated name based on date and selected categories
-- go back to the previous step with `0`
-- return to the main menu after results
+## Interactive Wizard
 
-You can still select catalogs explicitly with flags or use `--catalog all`.
+The default flow when running without flags:
 
-## Protocol selection
+| Step | Action |
+|------|--------|
+| 1 | Main menu — **Start new check** or **Check IP** |
+| 2 | Select one or more catalogs |
+| 3 | Select one or more protocols |
+| 4 | Apply optional filters (or skip with *I don't know*) |
+| 5 | Choose result size — Top N or All |
+| 6 | Latency check runs with live progress |
+| 7 | View results, save, or return to main menu |
 
-Protocols can now be selected explicitly, including multiple values:
+- Type **`0`** at any step to go back.
+- Press **`Ctrl+C`** to return to the main menu; press again to exit.
 
-- `DNSCrypt`
-- `DoH`
-- `ODoH`
-- `DNSCrypt relay`
-- `ODoH relay`
+---
 
-You can pass `--proto` multiple times, or choose them interactively on startup.
-
-## Explicit filters
-
-Filtering is now fully explicit. Instead of fixed presets, you can combine the criteria you want:
-
-- `--require-nofilter`
-- `--require-nolog`
-- `--dnssec-only`
-- `--ip-version any|ipv4|ipv6`
-- `--country NAME` and repeat it as needed
-
-If you do not pass any of these flags, the tool keeps the default behavior neutral and only requires resolvers to be measurable.
-
-## Probe profiles
-
-To avoid checks that feel too fast and opaque, the tool now has explicit probe profiles:
-
-- `fast`
-- `balanced`
-- `deep`
-
-These presets control attempt count, delays, timeout and the default threaded worker budget. You can still override them manually with:
-
-- `-n`, `--number-ping`
-- `-p`, `--ping-delay`
-- `-s`, `--server-delay`
-- `-m`, `--time-out`
-- `--workers`
-
-Latency is measured by:
-
-1. TCP connect latency against the decoded resolver host/port.
-2. ICMP fallback if TCP probing fails, unless `--tcp-only` is enabled.
-3. Repeated probing with mean latency, standard error and reliability.
-
-## Terminal UI
-
-Terminal output now includes:
-
-- animated progress while catalogs are loading and resolvers are being checked
-- live counters for successful and failed checks
-- compact stamp rendering so long `sdns://...` values no longer break terminal width
-- optional full stamp display when needed
-
-Progress is written to `stderr`, so machine-readable output can still be redirected safely from `stdout`.
-
-During interactive mode you can press `Ctrl+C` on any screen to return to the main menu. Press `Ctrl+C` again in the main menu to exit the program.
-
-## Usage
-
-Run the legacy entry point:
+## CLI Reference
 
 ```bash
-python3 ping_dnscrypt.py --catalog public-resolvers --profile balanced -t --top 10
+python3 ping_dnscrypt.py [OPTIONS]
 ```
 
-Or use the package entry point:
+### Catalogs & Protocols
+
+| Flag | Description |
+|------|-------------|
+| `--catalog NAME` | Select a catalog (repeatable) |
+| `--catalog all` | Load all catalogs |
+| `--list-catalogs` | Print available catalog names |
+| `--proto NAME` | Select a protocol (repeatable) |
+| `--list-protos` | Print available protocol names |
+
+### Filters
+
+| Flag | Description |
+|------|-------------|
+| `--require-nofilter` | Only resolvers with no filtering |
+| `--require-nolog` | Only resolvers with no logging |
+| `--dnssec-only` | Only DNSSEC-validating resolvers |
+| `--ip-version any\|ipv4\|ipv6` | Filter by IP version |
+| `--country NAME` | Filter by country (repeatable) |
+
+### Probing
+
+| Flag | Description |
+|------|-------------|
+| `--profile fast\|balanced\|deep` | Probe profile preset |
+| `-n`, `--number-ping` | Number of probe attempts |
+| `-p`, `--ping-delay` | Delay between pings (seconds) |
+| `-s`, `--server-delay` | Delay between servers (seconds) |
+| `-m`, `--time-out` | Probe timeout (seconds) |
+| `--workers` | Concurrent worker threads |
+| `--tcp-only` | Disable ICMP fallback |
+
+### Output
+
+| Flag | Description |
+|------|-------------|
+| `--top N` | Show fastest N results |
+| `--all` | Show all successful results |
+| `--stamp-mode compact\|full\|hidden` | SDNS stamp display mode |
+| `--json` | Emit JSON output |
+| `--cache-dir PATH` | Catalog cache directory |
+
+### Examples
+
+Top 10 DNSCrypt resolvers with no filtering and no logging, IPv4 only:
 
 ```bash
-python3 -m dnscrypt_sorter.cli --catalog all --proto all --require-nolog --ip-version ipv4 --profile deep -t --all
+python3 ping_dnscrypt.py \
+  --catalog public-resolvers \
+  --proto DNSCrypt \
+  --require-nofilter --require-nolog \
+  --ip-version ipv4 \
+  --profile balanced -t --top 10
 ```
 
-Useful options:
-
-- `--catalog NAME`: select an official catalog, repeatable
-- `--catalog all`: load all official catalogs
-- `--list-catalogs`: print supported catalog names
-- `--proto NAME`: select protocol to test, repeatable
-- `--list-protos`: print supported protocol names
-- `--require-nofilter`
-- `--require-nolog`
-- `--dnssec-only`
-- `--ip-version any|ipv4|ipv6`
-- `--country NAME`
-- `--profile fast|balanced|deep`
-- `--top N`: print the fastest `N` results
-- `--all`: print all successful results
-- `--stamp-mode compact|full|hidden`
-- `--json`: emit JSON instead of terminal UI
-- `--cache-dir PATH`: directory used to cache downloaded catalogs
-
-## Interactive wizard flow
-
-The default interactive flow is now:
-
-1. choose `Start new check` or `Check IP` in the main menu
-2. choose one or more catalogs
-3. choose one or more protocols
-4. choose optional filters
-5. choose result size: `top N` or `all`
-6. run checks
-7. save results or return to the main menu
-
-At every wizard step after the first one you can type `0` to return to the previous menu. In the main menu and on the first catalog step, `0` exits the program.
-
-Examples:
-
-Check DNSCrypt resolvers from `public-resolvers` with `nofilter`, `nolog`, and IPv4 only, then show the top 10:
+All DoH endpoints in Germany:
 
 ```bash
-python3 ping_dnscrypt.py --catalog public-resolvers --proto DNSCrypt --require-nofilter --require-nolog --ip-version ipv4 --profile balanced -t --top 10
+python3 ping_dnscrypt.py \
+  --catalog all --proto DoH \
+  --country Germany \
+  --profile deep -t --all
 ```
 
-Check all official catalogs, keep only DoH endpoints in Germany, and print everything:
+JSON output with full stamps:
 
 ```bash
-python3 ping_dnscrypt.py --catalog all --proto DoH --country Germany --profile deep -t --all
+python3 ping_dnscrypt.py \
+  --catalog public-resolvers --proto all \
+  --top 25 --json
 ```
 
-Emit JSON with full stamps:
+---
 
-```bash
-python3 ping_dnscrypt.py --catalog public-resolvers --proto all --top 25 --json
+## Probe Profiles
+
+| Profile | Attempts | Timeout | Workers | Use case |
+|---------|----------|---------|---------|----------|
+| `fast` | 3 | 2 s | 32 | Quick scan |
+| `balanced` | 5 | 3 s | 16 | Default |
+| `deep` | 10 | 5 s | 8 | Thorough analysis |
+
+Override any preset parameter with the corresponding flag.
+
+---
+
+## Saving Results
+
+In interactive mode the wizard offers to save after displaying results. The default filename is auto-generated:
+
+```
+dnscrypt-results/20260310-public-resolvers-dnscrypt-nofilter-nolog.csv
 ```
 
-Save results non-interactively by redirecting output if needed, or use the built-in wizard save step in interactive mode. By default the wizard suggests saving into the `dnscrypt-results/` folder with an auto-generated name (date + selected catalogs, protocols, and filters). The folder is created automatically if it does not exist.
+The `dnscrypt-results/` directory is created automatically and is listed in `.gitignore`.
 
-## Credits
-
-Original project: [Magalame/Dnscrypt-list-ping-sorting](https://github.com/Magalame/Dnscrypt-list-ping-sorting) — a program to ping and sort the DNS servers proposed by dnscrypt.
+---
 
 ## Development
 
-Run tests:
-
 ```bash
-python3 -m unittest discover -s tests -v
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev]"
+
+# Run tests
+python3 -m pytest tests/ -v
 ```
 
-Install as a local package:
+---
 
-```bash
-python3 -m pip install -e .
-```
+## Credits
+
+Original project by [Magalame](https://github.com/Magalame/Dnscrypt-list-ping-sorting) — a program to ping and sort the DNS servers proposed by [dnscrypt.info](https://dnscrypt.info/). Many thanks to the original author for the idea and the initial implementation.

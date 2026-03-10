@@ -7,6 +7,7 @@ import signal
 import sys
 from typing import Callable, Iterable, Sequence
 
+from . import __version__
 from .models import MeasurementResult
 
 try:
@@ -152,12 +153,12 @@ class TerminalUI:
             if width >= 80:
                 content = Text(BANNER.rstrip("\n"), style="bold bright_cyan")
             else:
-                content = Text("DNSCrypt Sorter", style="bold bright_cyan", justify="center")
+                content = Text("DNSCrypt-Sorter", style="bold bright_cyan", justify="center")
             panel = Panel(
                 content,
                 box=box.DOUBLE,
                 border_style="bright_blue",
-                subtitle="[dim white]Measure and rank DNS resolvers by latency[/dim white]",
+                subtitle=f"[dim white]DNSCrypt-Sorter v{__version__}[/dim white]",
                 padding=(0, 2),
             )
             self.stderr_console.print(panel)

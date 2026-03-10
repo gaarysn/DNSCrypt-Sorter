@@ -3,9 +3,9 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "dnscrypt-list-ping-sorting"
-version = "0.2.0"
-description = "Rank measurable DNS resolvers from official DNSCrypt catalogs by latency"
+name = "dnscrypt-sorter"
+version = "0.5.0"
+description = "DNSCrypt-Sorter — measure and rank DNS resolvers by latency"
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [

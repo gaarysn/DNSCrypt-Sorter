@@ -139,10 +139,7 @@ def render_ip_report(ui: TerminalUI, report: IPCheckReport) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description=(
-            "Measure and rank official DNSCrypt catalogs with animated terminal progress, "
-            "probe profiles and compact stamp rendering."
-        )
+        description="DNSCrypt-Sorter — measure and rank DNS resolvers by latency"
     )
     parser.add_argument(
         "--catalog",
