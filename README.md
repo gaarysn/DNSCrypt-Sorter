@@ -14,6 +14,12 @@ The tool loads resolver lists from `dnscrypt.info`, filters them by protocol and
 - JSON output for automation
 - Cache support for resolver catalogs
 
+## Some Notes
+
+- We are very early in this project. Expect bugs.
+- We are not accepting contributions yet.
+- AI was used during development.
+
 ## Requirements
 
 - Python 3.10+
